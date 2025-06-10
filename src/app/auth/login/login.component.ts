@@ -1,10 +1,25 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
+  AbstractControl,
   FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { debounceTime } from 'rxjs';
+
+function mustContainQuestionMark(control: AbstractControl) {
+  const value = control.value;
+  if (value && !value.includes('?')) return { mustContainQuestionMark: true };
+  return null;
+}
+
+let savedEmailValue = '';
+const savedLoginForm = window.localStorage.getItem('saved-login-form');
+if (savedLoginForm) {
+  const parsedForm = JSON.parse(savedLoginForm);
+  savedEmailValue = parsedForm.email || '';
+}
 
 @Component({
   selector: 'app-login',
@@ -13,15 +28,28 @@ import {
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   form = new FormGroup({
-    email: new FormControl('', {
+    email: new FormControl(savedEmailValue, {
       validators: [Validators.required, Validators.email],
     }),
     password: new FormControl('', {
-      validators: [Validators.required, Validators.minLength(6)],
+      validators: [
+        Validators.required,
+        Validators.minLength(6),
+        mustContainQuestionMark,
+      ],
     }),
   });
+
+  ngOnInit(): void {
+    this.form.valueChanges.pipe(debounceTime(500)).subscribe((value) => {
+      window.localStorage.setItem(
+        'saved-login-form',
+        JSON.stringify({ email: value.email })
+      );
+    });
+  }
 
   get isEmailInvalid(): boolean {
     return (
