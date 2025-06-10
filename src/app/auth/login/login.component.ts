@@ -23,6 +23,22 @@ export class LoginComponent {
     }),
   });
 
+  get isEmailInvalid(): boolean {
+    return (
+      this.form.controls.email.touched &&
+      this.form.controls.email.dirty &&
+      this.form.controls.email.invalid
+    );
+  }
+
+  get isPasswordInvalid(): boolean {
+    return (
+      this.form.controls.password.touched &&
+      this.form.controls.password.dirty &&
+      this.form.controls.password.invalid
+    );
+  }
+
   onSubmit() {
     console.log(this.form);
     const email = this.form.value.email;
